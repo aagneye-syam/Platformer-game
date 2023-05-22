@@ -8,56 +8,55 @@ from os.path import isfile, join
 pygame.init()
 pygame.display.set_caption("Platformer Game")
 
-WIDTH,HEIGHT = 1000, 800
+WIDTH, HEIGHT = 1000, 800
 FPS = 60
 PLAYER_VEL = 5
 
-window = pygame.display.set_mode((WIDTH,HEIGHT))
+window = pygame.display.set_mode((WIDTH, HEIGHT))
 
 
 class Player(pygame.sprite.Sprite):
-    COLOR = (255,0,0)
+    COLOR = (255, 0, 0)
+    GRAVITY = 1
 
-    def __init__(self,x,y,width,height):
-        self.rect = pygame.Rect(x,y,width,height)
+    def __init__(self, x, y, width, height):
+        self.rect = pygame.Rect(x, y, width, height)
         self.x_vel = 0
         self.y_vel = 0
         self.mask = None
         self.direction = "left"
         self.animation_count = 0
+        self.fall_count = 0
 
-
-    def move(self,dx,dy):
+    def move(self, dx, dy):
         self.rect.x += dx
         self.rect.y += dy
 
-
-    def move_left(self,vel):
+    def move_left(self, vel):
         self.x_vel = -vel
         if self.direction != "left":
             self.direction = "left"
             self.animation_count = 0
-            
 
-    def move_right(self,vel):
+    def move_right(self, vel):
         self.x_vel = vel
         if self.direction != "right":
             self.direction = "right"
             self.animation_count = 0
 
-    def loop(self,fps):
+    def loop(self, fps):
+        self.y_vel += min(1, (self.fall_count / fps) * self.GRAVITY)
         self.move(self.x_vel, self.y_vel)
 
+        self.fall_count += 1
 
-    def draw(self,win):
+    def draw(self, win):
         pygame.draw.rect(win, self.COLOR, self.rect)
 
 
-
-
 def get_background(name):
-    image = pygame.image.load(join("assets","Background",name))
-    _, _, width,height = image.get_rect()
+    image = pygame.image.load(join("assets", "Background", name))
+    _, _, width, height = image.get_rect()
     tiles = []
 
     for i in range(WIDTH//width+1):
@@ -67,12 +66,13 @@ def get_background(name):
 
     return tiles, image
 
-def draw(window, background, bg_image,player):
+
+def draw(window, background, bg_image, player):
 
     for tile in background:
-        window.blit(bg_image,tile)
+        window.blit(bg_image, tile)
 
-    player.draw(window)    
+    player.draw(window)
 
     pygame.display.update()
 
@@ -88,28 +88,25 @@ def handle_move(player):
         player.move_right(PLAYER_VEL)
 
 
-
 def main(window):
-    
+
     clock = pygame.time.Clock()
     background, bg_image = get_background("Gray.png")
 
-    player = Player(100,100,50,50)
+    player = Player(100, 100, 50, 50)
 
     run = True
-    while run :
+    while run:
         clock.tick(FPS)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                 run = False
-                 break
+                run = False
+                break
 
-
-        player.loop(FPS)    
-        handle_move(player)    
-        draw(window,background, bg_image,player)
-
+        player.loop(FPS)
+        handle_move(player)
+        draw(window, background, bg_image, player)
 
     pygame.quit()
     quit()
